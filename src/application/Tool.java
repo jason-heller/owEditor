@@ -1,0 +1,5 @@
+package application;
+
+public enum Tool {
+	NOTOOL, HEIGHTTOOL, SMOOTHTOOL, BIOMETOOL, PATHTOOL, REGIONTOOL, ENTITYTOOL;
+}

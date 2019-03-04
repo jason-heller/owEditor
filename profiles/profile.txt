@@ -1,0 +1,150 @@
+gameinfo
+{
+	name = "DEFAULT"
+	version = "0.1"
+	modelsDir = "*/models"
+	texturesDir = "*/textures"
+	prefferedDir = "C:\Users\tjaso\Desktop\coding4thman\testmap"
+}
+
+materials 
+{
+	names = "grass, metal, rock"
+	ids = "0, 1, 2"
+}
+
+mapstructures
+{
+	biomes = "temperate(0 1 0), tundra(.5 .5 1), foggy(.7 .7 .7), bog(.3 .8 .3), underground(.4 .4 .4), hell(1 0 0), river(.35 .35 1), mountain(0 1 0)"
+	regions = "forest(0 1 0), lake(.4 .4 1), marsh(1 .4 1)"
+	paths = "grass trail(0 1 0), dirt trail(.8 .5 .5), gravel trail(.8 .8 .8)"
+}
+
+flags
+{
+	flags = "isOverworld, hasSkybox, hasHeightmap, hasWeather, isIndoors"
+	values = "TRUE, TRUE, TRUE, TRUE, FALSE"
+}
+
+model
+{
+	name = "cube"
+	solidity = "1"
+	isCollisionMesh = "FALSE"
+	collisionMesh = "NONE"
+	filename = "cube.obj"
+}
+
+texture
+{
+	name = "default"
+	isTransparent = "FALSE"
+	material = "grass"
+	filename = "default.png"
+}
+
+model
+{
+	name = "Paper Mill Building"
+	solidity = "2"
+	isCollisionMesh = "FALSE"
+	collisionMesh = "NONE"
+	filename = "papermill_gebaude1.obj"
+}
+
+texture
+{
+	name = "Paper Mill Building"
+	isTransparent = "FALSE"
+	material = "metal"
+	filename = "papermill_gebaude1.png"
+}
+
+model
+{
+	name = "Pier"
+	solidity = "2"
+	isCollisionMesh = "FALSE"
+	collisionMesh = "NONE"
+	filename = "pier.obj"
+}
+
+texture
+{
+	name = "Wood"
+	isTransparent = "FALSE"
+	material = "wood"
+	filename = "wood.png"
+}
+
+model
+{
+	name = "Water Tower"
+	solidity = "3"
+	isCollisionMesh = "FALSE"
+	collisionMesh = "Water Tower [navmesh]"
+	filename = "water_tower.obj"
+}
+
+model
+{
+	name = "Water Tower [navmesh]"
+	solidity = "3"
+	isCollisionMesh = "TRUE"
+	collisionMesh = "NONE"
+	filename = "water_tower.obj"
+}
+
+texture
+{
+	name = "Water Tower"
+	isTransparent = "FALSE"
+	material = "metal"
+	filename = "water_tower.png"
+}
+
+model
+{
+	name = "Lamp"
+	solidity = "1"
+	isCollisionMesh = "FALSE"
+	collisionMesh = "NONE"
+	filename = "lamp.obj"
+}
+
+model
+{
+	name = "Bush"
+	solidity = "0"
+	isCollisionMesh = "FALSE"
+	collisionMesh = "NONE"
+	filename = "bush.obj"
+}
+
+model
+{
+	name = "Pine Tree"
+	solidity = "0"
+	isCollisionMesh = "FALSE"
+	collisionMesh = "NONE"
+	filename = "pine.obj"
+}
+
+texture
+{
+	name = "Tree Foliage"
+	isTransparent = "FALSE"
+	material = "grass"
+	filename = "foliage_trees.png"
+}
+
+entity
+{
+	name = "default entity"
+	isVisible = "TRUE"
+	model = "cube"
+	texture = "default"
+	scale = "1"
+	material = "grass"
+	properties = ""
+}
