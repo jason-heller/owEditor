@@ -10,7 +10,7 @@ owEditor is a 3D map editor made in java, that is current a work in-progress. ow
 
 <h2>Third Party Libraries</h2>
 <ul>
-<li><a href="http://sourceforge.net/projects/simplevoronoi/">Simple Voronoi</a></li>
 <li><a href="https://github.com/JOML-CI/JOML">JOML</a></li>
 <li><a href="http://legacy.lwjgl.org/">LWJGL (legacy)</a></li>
+<li><a href="http://sourceforge.net/projects/simplevoronoi/">Simple Voronoi</a></li>
 </ul>
