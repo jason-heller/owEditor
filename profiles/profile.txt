@@ -17,7 +17,7 @@ mapstructures
 {
 	biomes = "temperate(0 1 0), tundra(.5 .5 1), foggy(.7 .7 .7), bog(.3 .8 .3), underground(.4 .4 .4), hell(1 0 0), river(.35 .35 1), mountain(0 1 0)"
 	regions = "forest(0 1 0), lake(.4 .4 1), marsh(1 .4 1)"
-	paths = "grass trail(0 1 0), dirt trail(.8 .5 .5), gravel trail(.8 .8 .8)"
+	paths = "grass trail(0 1 0), dirt trail(.8 .5 .5), gravel trail(.8 .8 .8), powerlines(.388 .988 1), powerline branch(.388 .75 1), transmission line(.388 .662 1), metal fence(.309 .309 .309), wood fence(.55 .42 .30), guard rail(.6 .6 .6) "
 }
 
 flags
@@ -35,12 +35,30 @@ model
 	filename = "cube.obj"
 }
 
+model
+{
+	name = "player_bbox"
+	solidity = "1"
+	isCollisionMesh = "FALSE"
+	collisionMesh = "NONE"
+	filename = "player_bbox.obj"
+	associatedTexture = "editor_specific"
+}
+
 texture
 {
 	name = "default"
 	isTransparent = "FALSE"
 	material = "grass"
 	filename = "default.png"
+}
+
+texture
+{
+	name = "editor_specific"
+	isTransparent = "FALSE"
+	material = "grass"
+	filename = "editorspec.png"
 }
 
 model
@@ -142,7 +160,7 @@ entity
 {
 	name = "default entity"
 	isVisible = "TRUE"
-	model = "cube"
+	model = "player_bbox"
 	texture = "default"
 	scale = "1"
 	material = "grass"
