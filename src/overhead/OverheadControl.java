@@ -11,6 +11,7 @@ import java.util.Map;
 
 import application.Globals;
 import application.Tool;
+import console.Memento;
 import heightmap.Heightmap;
 import io.SaveData;
 import io.data.DataChunk;

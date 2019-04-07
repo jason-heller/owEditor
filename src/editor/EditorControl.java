@@ -1,20 +1,32 @@
 package editor;
 
+import java.awt.event.KeyEvent;
+
 import org.joml.Vector3f;
-import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
 import application.Globals;
 import application.Profile;
 import application.Tool;
+import application.swing.windows.DaisyChainDialog;
+import assets.Entity;
 import assets.Model;
 import assets.TextureAsset;
+import console.History;
+import console.cmd.DeleteSelectedCommand;
+import console.cmd.FastCloneCommand;
+import console.cmd.PasteSelectedCommand;
+import console.cmd.PlaceEntityCommand;
+import console.cmd.RetextureEntityCommand;
+import console.cmd.RetextureSelectedCommand;
 import entity.EntityControl;
 import entity.PlacedEntity;
 import heightmap.Heightmap;
 import heightmap.HeightmapControl;
+import utils.AppUtils;
 import utils.Input;
+import utils.Keys;
 
 public class EditorControl {
 	private HeightmapControl heightmapControl;
@@ -22,10 +34,13 @@ public class EditorControl {
 	
 	private static Model selectedModel;
 	private static TextureAsset selectedTexture;
+	private static Entity selectedEntity;
 	private static Model circleToolList;
 	private static Model squareToolList;
 	private static Model pointList;
 
+	private static boolean fastCloning = false;
+	
 	public EditorControl() {
 		heightmapControl = new HeightmapControl();
 		entityControl = new EntityControl();
@@ -42,34 +57,76 @@ public class EditorControl {
 		heightmapControl.step();
 		entityControl.step();
 		
+		if (fastCloning && (!Input.isDown(KeyEvent.VK_ALT) || !Input.isMouseDown(0))) {
+			fastCloning = false;
+			entityControl.endTransforms();
+		}
+		
+		if (Input.isMousePressed(0)) {
+			if (Input.isDown(KeyEvent.VK_ALT) && !entityControl.isTransforming()) {
+				entityControl.endTransforms();
+				fastCloning = true;
+				//entityControl.fastClone(HeightmapControl.picker.getCurrentRay());
+				new FastCloneCommand(HeightmapControl.picker.getCurrentRay());
+				
+			} else {
+				fastCloning = false;
+				entityControl.endTransforms();
+				entityControl.selectEntity(HeightmapControl.picker.getCurrentRay());
+			}
+		}
+		
 		switch(Globals.tool) {
 		case ENTITYTOOL:
-			if (Input.isMousePressed(0)) {
-				entityControl.endTransforms();
-				
-				entityControl.selectEntity(HeightmapControl.picker.getCurrentRay(), HeightmapControl.picker.getCurrentTerrainPoint());
-			} else if (Input.isMousePressed(1)) {
+			if (Input.isMousePressed(1) && !fastCloning) {
 				entityControl.cancelTransforms();
 				
-				entityControl.placeEntity(selectedModel, selectedTexture);
+				if (selectedEntity == null) {
+					new PlaceEntityCommand(selectedModel, selectedTexture);
+				} else {
+					new PlaceEntityCommand(selectedEntity);
+				}
 			}
 			
-			if (Input.isPressed(Keyboard.KEY_DELETE)) {
-				entityControl.deleteSelected();
+			if (Input.isPressed(KeyEvent.VK_DELETE)) {
+				//entityControl.deleteSelected();
+				new DeleteSelectedCommand();
 			}
 			
-			if (Input.isDown(Keyboard.KEY_LCONTROL)) {
-				if (Input.isPressed(Keyboard.KEY_C)) {
+			if (Input.isDown(KeyEvent.VK_CONTROL)) {
+				if (Input.isPressed(Keys.C)) {
 					entityControl.copy();
 				}
 				
-				if (Input.isPressed(Keyboard.KEY_X)) {
+				if (Input.isPressed(Keys.X)) {
 					entityControl.cut();
 				}
 				
-				if (Input.isPressed(Keyboard.KEY_V)) {
-					entityControl.paste();
+				if (Input.isPressed(Keys.V)) {
+					//entityControl.paste();
+					new PasteSelectedCommand();
 				}
+				
+				if (Input.isPressed(Keys.Y)) {
+					History.redo();
+				}
+				
+				if (Input.isPressed(Keys.Z)) {
+					History.undo();
+				}
+				
+				if (Input.isPressed(Keys.D)) {
+					if (EntityControl.selected.size() > 1) {
+						AppUtils.warningMessage("Please select only one object");
+					} else if (EntityControl.selected.size() == 0) {
+						AppUtils.warningMessage("Please select an object");
+					} else {
+						//new DaisyChainDialog(EntityControl.selected.get(0), entityControl);
+						AppUtils.open(DaisyChainDialog.class, false, ((PlacedEntity)EntityControl.selected.get(0)), entityControl);
+		
+					}
+				}
+				
 				
 				if (Input.getMouseDWheel() > 0) {
 					for(PlacedEntity e : EntityControl.selected) {
@@ -81,21 +138,37 @@ public class EditorControl {
 						e.scale -= 2;
 					}
 				}
-			}
+			} else {
 			
-			if (Input.isPressed(Keyboard.KEY_T)) {
-				entityControl.beginTranslating(HeightmapControl.picker.getCurrentTerrainPoint());
-			}
-			
-			if (Input.isPressed(Keyboard.KEY_R)) {
-				entityControl.beginRotating();
-			}
-			
-			if (Input.isPressed(Keyboard.KEY_E)) {
-				entityControl.beginScaling();
+				if (Input.isPressed(KeyEvent.VK_T)) {
+					EntityControl.beginTranslating(HeightmapControl.picker.getCurrentTerrainPoint());
+				}
+				
+				if (Input.isPressed(KeyEvent.VK_R)) {
+					entityControl.beginRotating();
+				}
+				
+				if (Input.isPressed(KeyEvent.VK_E)) {
+					entityControl.beginScaling();
+				}
 			}
 			
 			break;
+			
+		case TEXTURETOOL:
+			if (Input.isMousePressed(1)) {
+				PlacedEntity entity = EntityControl.getClicked(HeightmapControl.picker.getCurrentRay());
+				
+				if (entity != null) {
+					new RetextureEntityCommand(entity, selectedTexture);
+				}
+			}
+			
+			if (Input.isPressed(KeyEvent.VK_ENTER)) {
+				new RetextureSelectedCommand(selectedTexture);
+			}
+			break;
+		
 			default:
 		}
 	}
@@ -140,6 +213,10 @@ public class EditorControl {
 	
 	public static void setTexture(TextureAsset texture) {
 		selectedTexture = texture;
+	}
+	
+	public static void setEntity(Entity e) {
+		selectedEntity = e;
 	}
 	
 	public void clean() {
@@ -214,5 +291,9 @@ public class EditorControl {
 
 	public EntityControl getEntityControl() {
 		return entityControl;
+	}
+
+	public void setEntityControl(EntityControl state) {
+		this.entityControl = state;
 	}
 }

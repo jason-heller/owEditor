@@ -2342,4 +2342,8 @@ public class Matrix4f implements Serializable, Externalizable {
 		return this;
 	}
 
+	public void transform(Vector3f v) {
+    	v.mul(this);
+    }
+
 }

@@ -14,7 +14,7 @@ public class Console {
 	}
 
 	public static void send(String string) {
-		final String[] strs = string.split(" ");
+		/*final String[] strs = string.split(" ");
 		if (strs == null || strs.length == 0) {
 			return;
 		}
@@ -32,9 +32,9 @@ public class Console {
 		if (cmd != null) {
 			cmd.execute(args);
 			return;
-		}
+		}*/
 
-		log("No such command: " + command);
+		log("TODO: Implement this feature");
 	}
 
 	public static void setLog(JTextArea textArea) {

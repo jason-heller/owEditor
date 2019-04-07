@@ -1,4 +1,4 @@
-package application.swing.frames;
+package application.swing.windows;
 
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
@@ -14,6 +14,7 @@ import javax.swing.JPanel;
 
 import application.Flag;
 import application.Profile;
+import utils.AppUtils;
 
 public class FlagFrame extends JFrame {
 
@@ -25,6 +26,7 @@ public class FlagFrame extends JFrame {
 	
 	public FlagFrame() {
 		super();
+		this.setAlwaysOnTop(true);
 		
 		values = new boolean[Profile.flags.length];
 		for(int i = 0; i < values.length; i++) {
@@ -80,7 +82,7 @@ public class FlagFrame extends JFrame {
 				for(int i = 0; i < values.length; i++) {
 					Profile.flags[i].value = values[i];
 				}
-				dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
+				AppUtils.close(frame);
 			}
 		});
 		buttons.add(applyAndClose);
@@ -102,7 +104,7 @@ public class FlagFrame extends JFrame {
 		close.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
+				AppUtils.close(frame);
 			}
 		});
 		buttons.add(close);

@@ -1,251 +1,238 @@
 package utils;
 
+import static application.swing.SwingControl.isTyping;
+
+import java.awt.KeyEventDispatcher;
+import java.awt.KeyboardFocusManager;
+import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
+import utils.Keys;
+
+import javax.swing.JList;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
 
+import application.swing.SwingControl;
 import opengl.GLWindow;
 
 public enum Input {
-	
+
 	INPUT;
-	
+
 	private int[] keys;
 	private int[] states;
 	private int[] mouse;
-	
+
 	private static int mouseScreenPosX;
 	private static int mouseScreenPosY;
-	
+
 	private static float mouseDX, mouseDY;
 	private static int mouseDWheel;
-	
-	private static float backSpaceTimer = 0;
-	
-	public final int NOT_PRESSED 	= 0;
-	public final int HELD_DOWN 		= 1;
-	public final int PRESSED 		= 2;
-	public final int RELEASED	 	= 3;
-	
+
 	private final int MAX_KEYS = 8;
-	
+	private final int PRESSED = 1, HELD = 2, NOT_PRESSED = 3;
+
 	Input() {
 		keys = new int[MAX_KEYS];
 		states = new int[MAX_KEYS];
 		mouse = new int[3];
+
+		KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(new KeyEventDispatcher() {
+			@Override
+			public boolean dispatchKeyEvent(KeyEvent ke) {
+				return onKeyInput(ke.getKeyCode(), ke.getID());
+			}
+		});
 	}
 	
-	public static void poll() {
-		int i = 0;
+	private boolean onKeyInput(int keyCode, int id) {
+		synchronized (Input.class) {
+			int key = -1;
+			
+			if (id == KeyEvent.KEY_PRESSED) {
+				key = parse(keyCode);
+				
+				if (key == -1) return false;
+				
+				int freeInd = -1;
+				
+				for (int i = 0; i < INPUT.MAX_KEYS; i++) {
+					if (freeInd == -1 && keys[i] == 0) {
+						freeInd = i;
+					}
+					
+					if (keys[i] == key) {
+						return false;
+					}
+				}
+				
+				if (freeInd != -1) {
+					keys[freeInd] = key;
+					states[freeInd] = PRESSED;
+				}
+			}
+			
+			if (id == KeyEvent.KEY_RELEASED) {
+				key = parse(keyCode);
+				
+				if (key == -1) return false;
+				
+				for (int i = 0; i < INPUT.MAX_KEYS; i++) {
+					if (keys[i] == key) {
+						states[i] = NOT_PRESSED;
+						keys[i] = 0;
+					}
+				}
+			}
+			return false;
+		}
+	}
+	
+	public static int parse(int id) {
 		
-		int[] keys = INPUT.keys;
-		int[] states = INPUT.states;
-		int[] mouse = INPUT.mouse;
+		boolean isInEditorList = SwingControl.jFrame.getFocusOwner() instanceof JList;
 		
-		for(; i < INPUT.MAX_KEYS; i++) {
-			if (states[i] == INPUT.RELEASED)
-				keys[i] = 0;
-			if (states[i] == INPUT.PRESSED)
-				states[i] = INPUT.HELD_DOWN;
+		switch (id) {
+		case KeyEvent.VK_W: return when(KeyEvent.VK_W, !isTyping);
+		case KeyEvent.VK_A: return when(KeyEvent.VK_A, !isTyping);
+		case KeyEvent.VK_S: return when(KeyEvent.VK_S, !isTyping);
+		case KeyEvent.VK_D: return when(KeyEvent.VK_D, !isTyping);
+		
+		case KeyEvent.VK_UP: 	return when(KeyEvent.VK_UP, !isInEditorList && !isTyping);
+		case KeyEvent.VK_DOWN:	return when(KeyEvent.VK_DOWN, !isInEditorList && !isTyping);
+		case KeyEvent.VK_LEFT: 	return when(KeyEvent.VK_LEFT, !isTyping);
+		case KeyEvent.VK_RIGHT:	return when(KeyEvent.VK_RIGHT, !isTyping);
+
 		}
 		
+		return id;
+	}
+
+	private static int when(int key, boolean condition) {
+		return condition ? key : -1;
+	}
+
+	public static void poll() {
+		int i = 0;
+
+		int[] states = INPUT.states;
+		int[] mouse = INPUT.mouse;
+
+		for (; i < INPUT.MAX_KEYS; i++) {
+			if (states[i] == INPUT.PRESSED)
+				states[i] = INPUT.HELD;
+		}
+
 		i = 0;
-		
+
 		mouseDWheel = Mouse.getDWheel();
 		mouseDX = Mouse.getDX();
 		mouseDY = Mouse.getDY();
+
+		mouseScreenPosX = (int) (((float) Mouse.getX() / Display.getWidth()) * GLWindow.viewportWidth);
+		mouseScreenPosY = (int) (GLWindow.viewportHeight
+				- ((float) Mouse.getY() / Display.getHeight()) * GLWindow.viewportHeight);
+
+		for (i = 0; i < 3; i++) {
+			if (Mouse.isButtonDown(i)) {
+				if (mouse[i] == 0)
+					mouse[i] = 1;
+				else
+					mouse[i] = 2;
+			} else {
+				if (mouse[i] == 1 || mouse[i] == 2)
+					mouse[i] = 3;
+				else
+					mouse[i] = 0;
+			}
+		}
 		
-		mouseScreenPosX = (int) (((float)Mouse.getX()/Display.getWidth())*GLWindow.viewportWidth);
-		mouseScreenPosY = (int) (GLWindow.viewportHeight - ((float)Mouse.getY()/Display.getHeight())*GLWindow.viewportHeight);
-		
+		// LWJGL Input
 		while(Keyboard.next()) {
 			int key = Keyboard.getEventKey();
 			
-			if(Keyboard.getEventKeyState()) {
-				for(; i < INPUT.MAX_KEYS; i++) {
-					if (keys[i] == 0) {
-						keys[i] = key;
-						states[i] = INPUT.PRESSED;
-						break;
-					}
-				}
+			if (Keyboard.getEventKeyState()) {
+				INPUT.onKeyInput(Keys.fromLWJGL(key), KeyEvent.KEY_PRESSED);
 			}
 			else {
-				for(int j = 0; j < INPUT.MAX_KEYS; j++) {
-					if (keys[j] == key) {
-						if (states[j] == INPUT.HELD_DOWN) states[j] = INPUT.RELEASED;
-						else keys[j] = 0;
-						break;
-					}
-				}
-			}
-			
-			i++;
-		}
-		
-		for(i = 0; i < 3; i++) {
-			if (Mouse.isButtonDown(i)) {
-				if (mouse[i] == 0) mouse[i] = 1;
-				else mouse[i] = 2;
-			}
-			else {
-				if (mouse[i] == 1 || mouse[i] == 2) mouse[i] = 3;
-				else mouse[i] = 0;
+				INPUT.onKeyInput(Keys.fromLWJGL(key), KeyEvent.KEY_RELEASED);
 			}
 		}
 	}
-	
+
 	public static int getAny() {
 		if (INPUT.keys[0] != 0) {
 			return INPUT.keys[0];
 		}
 		return -1;
 	}
-	
+
 	public static boolean isPressed(int key) {
-		for(int i = 0; i < INPUT.MAX_KEYS; i++) {
+		for (int i = 0; i < INPUT.MAX_KEYS; i++) {
 			if (INPUT.keys[i] == key && INPUT.states[i] == INPUT.PRESSED)
 				return true;
 		}
-		
-		return false;
-	}
-	
-	public static char[] getTypedKey() {
-		char[] output = new char[INPUT.MAX_KEYS];
-		for(int i = 0; i < INPUT.MAX_KEYS; i++) {
-			if (INPUT.keys[i] > 0 && INPUT.states[i] == INPUT.PRESSED)
-				output[i]=getChar(INPUT.keys[i]);
-			else
-				output[i]='`';
-		}
-		
-		if (INPUT.keys[0] == Keyboard.KEY_BACK) {
-			backSpaceTimer += 1f;
-			
-			if (backSpaceTimer > .45f) {
-				output[0] = '\b';
-				backSpaceTimer = .41f;
-			}
-		} else {
-			backSpaceTimer = 0f;
-		}
-		
-		return output;
-	}
 
-	public static boolean isReleased(int key) {
-		for(int i = 0; i < INPUT.MAX_KEYS; i++) {
-			if (INPUT.keys[i] == key && INPUT.states[i] == INPUT.RELEASED)
-				return true;
-		}
-		
 		return false;
 	}
 
 	public static boolean isDown(int key) {
-		for(int i = 0; i < INPUT.MAX_KEYS; i++) {
+		for (int i = 0; i < INPUT.MAX_KEYS; i++) {
 			if (INPUT.keys[i] == key && INPUT.states[i] != INPUT.NOT_PRESSED)
 				return true;
 		}
-		
+
 		return false;
 	}
-	
+
 	public static int keyState(int key) {
-		for(int i = 0; i < INPUT.MAX_KEYS; i++) {
+		for (int i = 0; i < INPUT.MAX_KEYS; i++) {
 			if (INPUT.keys[i] == key)
 				return INPUT.states[i];
 		}
-		
+
 		return INPUT.NOT_PRESSED;
 	}
-	
+
 	public static boolean isMouseDown(int key) {
 		return INPUT.mouse[key] == 2;
 	}
-	
+
 	public static boolean isMousePressed(int key) {
 		return INPUT.mouse[key] == 1;
 	}
-	
+
 	public static boolean isMouseReleased(int key) {
 		return INPUT.mouse[key] == 3;
 	}
-	
+
 	public static List<Integer> getHeldKeys() {
 		List<Integer> keys = new ArrayList<Integer>();
-		
+
 		if (Input.isDown(Keyboard.KEY_BACK)) {
 			keys.add(Keyboard.KEY_BACK);
 			return keys;
 		}
-		
-		for(int i = 0; i < INPUT.MAX_KEYS; i++) {
-			if (INPUT.keys[i] > 0 && INPUT.states[i] == INPUT.PRESSED || INPUT.states[i] == INPUT.HELD_DOWN)
+
+		for (int i = 0; i < INPUT.MAX_KEYS; i++) {
+			if (INPUT.keys[i] > 0 && INPUT.states[i] == INPUT.PRESSED || INPUT.states[i] == INPUT.HELD)
 				keys.add(INPUT.keys[i]);
 		}
-		
+
 		return keys;
-	}
-	
-	public static char getChar(int code){
-		boolean shift = Input.isDown(Keyboard.KEY_LSHIFT);
-		
-	    switch (code){
-	    case Keyboard.KEY_ADD: return '+';
-	    case Keyboard.KEY_SUBTRACT:
-        case Keyboard.KEY_MINUS: return shift?'_':'-';
-        case Keyboard.KEY_EQUALS: return shift?'+':'=';
-        case Keyboard.KEY_LBRACKET: return shift?'{':'[';
-        case Keyboard.KEY_RBRACKET: return shift?'}':']';
-        case Keyboard.KEY_BACKSLASH: return shift?'|':'\\';
-        case Keyboard.KEY_SLASH: return shift?'?':'/';
-        case Keyboard.KEY_PERIOD: return shift?'>':'.';
-        case Keyboard.KEY_COMMA: return shift?'<':',';
-        case Keyboard.KEY_MULTIPLY: return '*';
-        case Keyboard.KEY_APOSTROPHE: return shift?'\"':'\'';
-        case Keyboard.KEY_SEMICOLON: return shift?':':';';
-        case Keyboard.KEY_SPACE: return ' ';
-        
-        case Keyboard.KEY_1: return shift?'!':'1';
-        case Keyboard.KEY_2: return shift?'@':'2';
-        case Keyboard.KEY_3: return shift?'#':'3';
-        case Keyboard.KEY_4: return shift?'$':'4';
-        case Keyboard.KEY_5: return shift?'%':'5';
-        case Keyboard.KEY_6: return shift?'^':'6';
-        case Keyboard.KEY_7: return shift?'&':'7';
-        case Keyboard.KEY_8: return shift?'*':'8';
-        case Keyboard.KEY_9: return shift?'(':'9';
-        case Keyboard.KEY_0: return shift?')':'0';
-        
-        case Keyboard.KEY_BACK: return '\b';
-	    }
-	    
-	    String character = Keyboard.getKeyName(code);
-	    
-	    if (!Input.isDown(Keyboard.KEY_LSHIFT)) {
-			character = character.toLowerCase();
-		}
-		
-		if (character.length() < 2) {
-			return character.charAt(0);
-		}
-		
-		return '`';
 	}
 
 	public static float getMouseDX() {
 		return mouseDX;
 	}
-	
+
 	public static float getMouseDY() {
 		return mouseDY;
 	}
-	
+
 	public static int getMouseDWheel() {
 		return mouseDWheel;
 	}
@@ -253,18 +240,18 @@ public enum Input {
 	public static int getMouseX() {
 		return mouseScreenPosX;
 	}
-	
+
 	public static int getMouseY() {
 		return mouseScreenPosY;
 	}
 
 	public static void clear() {
-		for(int i = 0; i < INPUT.MAX_KEYS; i++) {
+		for (int i = 0; i < INPUT.MAX_KEYS; i++) {
 			INPUT.keys[i] = 0;
 			INPUT.states[i] = 0;
 		}
-		
-		for(int i = 0; i < 3; i++) {
+
+		for (int i = 0; i < 3; i++) {
 			INPUT.mouse[i] = 0;
 		}
 	}

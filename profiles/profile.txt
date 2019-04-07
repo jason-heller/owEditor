@@ -33,6 +33,7 @@ model
 	isCollisionMesh = "FALSE"
 	collisionMesh = "NONE"
 	filename = "cube.obj"
+	type = "unlinked"
 }
 
 model
@@ -42,7 +43,8 @@ model
 	isCollisionMesh = "FALSE"
 	collisionMesh = "NONE"
 	filename = "player_bbox.obj"
-	associatedTexture = "editor_specific"
+	associatedTexture = "editor specific"
+	type = "dev"
 }
 
 texture
@@ -51,14 +53,16 @@ texture
 	isTransparent = "FALSE"
 	material = "grass"
 	filename = "default.png"
+	type = "dev"
 }
 
 texture
 {
-	name = "editor_specific"
+	name = "editor specific"
 	isTransparent = "FALSE"
 	material = "grass"
 	filename = "editorspec.png"
+	type = "dev"
 }
 
 model
@@ -68,6 +72,8 @@ model
 	isCollisionMesh = "FALSE"
 	collisionMesh = "NONE"
 	filename = "papermill_gebaude1.obj"
+	associatedTexture = "Paper Mill Building"
+	tags = "building, pier, industrial"
 }
 
 texture
@@ -76,15 +82,18 @@ texture
 	isTransparent = "FALSE"
 	material = "metal"
 	filename = "papermill_gebaude1.png"
+	tags = "building, pier, industrial"
 }
 
 model
 {
-	name = "Pier"
+	name = "Boardwalk"
 	solidity = "2"
 	isCollisionMesh = "FALSE"
 	collisionMesh = "NONE"
 	filename = "pier.obj"
+	associatedTexture = "Wood"
+	tags = "wood, water, shore, pier"
 }
 
 texture
@@ -93,6 +102,7 @@ texture
 	isTransparent = "FALSE"
 	material = "wood"
 	filename = "wood.png"
+	tags = "nature, tree"
 }
 
 model
@@ -102,6 +112,8 @@ model
 	isCollisionMesh = "FALSE"
 	collisionMesh = "Water Tower [navmesh]"
 	filename = "water_tower.obj"
+	associatedTexture = "Water Tower"
+	tags = "industrial, pier"
 }
 
 model
@@ -111,6 +123,8 @@ model
 	isCollisionMesh = "TRUE"
 	collisionMesh = "NONE"
 	filename = "water_tower.obj"
+	type = "utility"
+	tags = "nav"
 }
 
 texture
@@ -119,6 +133,7 @@ texture
 	isTransparent = "FALSE"
 	material = "metal"
 	filename = "water_tower.png"
+	tags = "industrial, pier"
 }
 
 model
@@ -128,6 +143,8 @@ model
 	isCollisionMesh = "FALSE"
 	collisionMesh = "NONE"
 	filename = "lamp.obj"
+	type = "unlinked"
+	tags = "light, metal"
 }
 
 model
@@ -137,6 +154,8 @@ model
 	isCollisionMesh = "FALSE"
 	collisionMesh = "NONE"
 	filename = "bush.obj"
+	associatedTexture = "Tree Foliage"
+	tags = "nature, forest, brush"
 }
 
 model
@@ -146,6 +165,8 @@ model
 	isCollisionMesh = "FALSE"
 	collisionMesh = "NONE"
 	filename = "pine.obj"
+	associatedTexture = "Tree Foliage"
+	tags = "nature, forest"
 }
 
 texture
@@ -154,15 +175,27 @@ texture
 	isTransparent = "FALSE"
 	material = "grass"
 	filename = "foliage_trees.png"
+	tags = "nature, forest"
 }
 
-entity
+model
+{
+	name = "fence1"
+	solidity = "1"
+	isCollisionMesh = "FALSE"
+	collisionMesh = "NONE"
+	filename = "fence1.obj"
+	tags = "metal, industrial"
+}
+
+mapentity
 {
 	name = "default entity"
 	isVisible = "TRUE"
 	model = "player_bbox"
-	texture = "default"
+	texture = "editor specific"
 	scale = "1"
 	material = "grass"
 	properties = ""
+	type = "dev"
 }

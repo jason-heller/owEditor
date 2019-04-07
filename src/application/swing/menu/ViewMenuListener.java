@@ -8,6 +8,8 @@ import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 
+import application.Application;
+import application.Globals;
 import application.swing.CanvasFrame;
 import application.swing.SwingControl;
 import opengl.GLWindow;
@@ -31,6 +33,11 @@ public class ViewMenuListener implements ActionListener {
 		else if (cmd.equals("OVERHEAD VIEW"))
 		{
 			toggleCanvas(overheadCanvas, (JCheckBoxMenuItem)src);
+		}
+		else if (cmd.equals("SHOW UTILITY ASSETS"))
+		{
+			Globals.showUtilities = src.isSelected();
+			SwingControl.populateAssetList();
 		}
 		
 		container.revalidate();

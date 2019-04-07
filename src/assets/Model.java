@@ -5,9 +5,8 @@ import java.util.List;
 import org.joml.Vector3f;
 import org.lwjgl.opengl.GL11;
 
-public class Model {
+public class Model extends Asset {
 
-	public String name;
 	public int solidity;
 	public boolean isCollisionMesh;
 	public String collisionMesh;
@@ -17,6 +16,7 @@ public class Model {
 	private float[] vertices;
 	private Vector3f max;
 	private Vector3f min;
+	public String associatedTexture = "";
 
 	public static Model create() {
 		int id = GL11.glGenLists(1);
@@ -27,10 +27,6 @@ public class Model {
 		this.id = id;
 	}
 
-	public String toString() {
-		return name;
-	}
-	
 	public void clean() {
 		GL11.glDeleteLists(id, 1);
 	}

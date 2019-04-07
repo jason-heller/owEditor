@@ -26,7 +26,7 @@ import console.Console;
 @SuppressWarnings("serial")
 public class EditorCmdBox extends JPanel {
 	protected JTextArea textArea;
-	protected JTextField input;
+	protected HintTextField input;
 	protected String newline = "\n";
 
 	public EditorCmdBox() {
@@ -35,7 +35,7 @@ public class EditorCmdBox extends JPanel {
 
 		textArea = new JTextArea(5, 90);
 		Console.setLog(textArea);
-		input = new JTextField(1);
+		input = new HintTextField("cmd");
 		textArea.setEditable(false);
 		input.setEditable(true);
 		final JScrollPane scrollPane = new JScrollPane(textArea);

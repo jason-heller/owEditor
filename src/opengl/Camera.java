@@ -2,11 +2,10 @@ package opengl;
 
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
-import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
-import org.lwjgl.opengl.Display;
 
 import utils.Input;
+import utils.Keys;
 import utils.MathUtils;
 
 public class Camera {
@@ -31,29 +30,29 @@ public class Camera {
 		Vector3f foward = MathUtils.getDirection(view);
 		Vector3f strafe = Vector3f.cross(foward, Vector3f.UP_VECTOR);
 		
-		float speed = (Keyboard.isKeyDown(Keyboard.KEY_LCONTROL))?6f:2f;
+		float speed = (Input.isDown(Keys.SHIFT))?6f:2f;
 		
-		if (Keyboard.isKeyDown(Keyboard.KEY_W))
+		if (Input.isDown(Keys.W) && !Input.isDown(Keys.CTRL))
 			foward.mul(-speed);
-		else if (Keyboard.isKeyDown(Keyboard.KEY_S))
+		else if (Input.isDown(Keys.S) && !Input.isDown(Keys.CTRL))
 			foward.mul(speed);
 		else
 			foward.zero();
 		
-		if (Keyboard.isKeyDown(Keyboard.KEY_D))
+		if (Input.isDown(Keys.D) && !Input.isDown(Keys.CTRL))
 			strafe.mul(-speed);
-		else if (Keyboard.isKeyDown(Keyboard.KEY_A))
+		else if (Input.isDown(Keys.A) && !Input.isDown(Keys.CTRL))
 			strafe.mul(speed);
 		else
 			strafe.zero();
-		
+	
 		if (freecam) {
 			freecamLook();
 		} else {
 			defaultLook();
 		}
 
-		if (Input.isPressed(Keyboard.KEY_F)) {
+		if (Input.isPressed(Keys.F)) {
 			toggleFreecam();
 		}
 		
@@ -74,16 +73,16 @@ public class Camera {
 	}
 
 	private void defaultLook() {
-		if (Keyboard.isKeyDown(Keyboard.KEY_UP) && Keyboard.isKeyDown(Keyboard.KEY_DOWN)) {}
-		else if (Keyboard.isKeyDown(Keyboard.KEY_UP))
+		if (Input.isDown(Keys.UP) && Input.isDown(Keys.DOWN)) {}
+		else if (Input.isDown(Keys.UP))
 			pitch = Math.max(pitch-turnSpeed , -89.9f);
-		else if (Keyboard.isKeyDown(Keyboard.KEY_DOWN))
+		else if (Input.isDown(Keys.DOWN))
 			pitch = Math.min(pitch+turnSpeed, 89.9f);
 		
-		if (Keyboard.isKeyDown(Keyboard.KEY_LEFT) && Keyboard.isKeyDown(Keyboard.KEY_RIGHT)) {}
-		else if (Keyboard.isKeyDown(Keyboard.KEY_LEFT))
+		if (Input.isDown(Keys.LEFT) && Input.isDown(Keys.RIGHT)) {}
+		else if (Input.isDown(Keys.LEFT))
 			yaw-=turnSpeed;
-		else if (Keyboard.isKeyDown(Keyboard.KEY_RIGHT))
+		else if (Input.isDown(Keys.RIGHT))
 			yaw+=turnSpeed;
 	}
 

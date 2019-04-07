@@ -41,6 +41,10 @@ public class Vector3f implements Serializable, Externalizable {
 
 	public static final Vector3f UP_VECTOR = new Vector3f(0, 1, 0);
 
+	public static final Vector3f X_AXIS = new Vector3f(1, 0, 0);
+	public static final Vector3f Y_AXIS = UP_VECTOR;
+	public static final Vector3f Z_AXIS = new Vector3f(0, 0, 1);
+
 	/**
 	 * Adds v2 to v1. Does not modify v1 or v2
 	 */

@@ -57,7 +57,7 @@ public class DataFileReader {
 					if (ind != -1) {
 						values[ind] = value;
 					} else {
-						System.err.println("Unknown data element: "+name);
+						System.err.println("Unknown data element '" + name + "' in format '" + format.getName() + "'");
 					}
 					
 				}

@@ -3,10 +3,11 @@ package application;
 import org.lwjgl.opengl.Display;
 
 import application.swing.SwingControl;
-import application.swing.frames.SplashFrame;
+import application.swing.windows.SplashFrame;
 import editor.EditorControl;
 import opengl.GLControl;
 import opengl.tex.Texture;
+import utils.AppUtils;
 import utils.Input;
 
 public class Application {
@@ -28,7 +29,7 @@ public class Application {
 		
 		Globals.defaultTexture = Texture.create("*/res/default.png", "NOMATERIAL", false);
 		
-		new SplashFrame();
+		AppUtils.open(SplashFrame.class);
 		
 		loop();
 		

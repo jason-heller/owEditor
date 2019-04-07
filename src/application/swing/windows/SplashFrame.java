@@ -1,4 +1,4 @@
-package application.swing.frames;
+package application.swing.windows;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -20,6 +20,7 @@ import javax.swing.OverlayLayout;
 import javax.swing.SwingConstants;
 
 import application.swing.SwingControl;
+import utils.AppUtils;
 
 public class SplashFrame extends JFrame {
 
@@ -56,7 +57,7 @@ public class SplashFrame extends JFrame {
 			under.setVerticalAlignment(SwingConstants.BOTTOM);
 			under.setForeground(Color.WHITE);
 			under.setFont(new Font("Courier New", Font.PLAIN, 15));
-			img = ImageIO.read(new File("src/application/swing/frames/splash.png"));
+			img = ImageIO.read(new File("src/application/swing/windows/splash.png"));
 			JLabel label = new JLabel(new ImageIcon(img));
 			label.setMaximumSize(new Dimension(640, 320));
 			
@@ -114,7 +115,7 @@ public class SplashFrame extends JFrame {
 	}
 
 	private void close() {
-		dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
+		AppUtils.close(this);
 	}
 
 }

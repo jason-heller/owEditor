@@ -55,7 +55,7 @@ public class EditorToolbar extends JPanel implements ActionListener {
 		} else if (TERRAIN_SMOOTH.equals(cmd)) { // first button clicked
 			Globals.tool = Tool.SMOOTHTOOL;
 		} else if (TEX.equals(cmd)) { // third button clicked
-
+			Globals.tool = Tool.TEXTURETOOL;
 		} else if (BRUSH.equals(cmd)) { // third button clicked
 	
 		} else if (BRUSHFLOOR.equals(cmd)) { // third button clicked
@@ -70,6 +70,7 @@ public class EditorToolbar extends JPanel implements ActionListener {
 		buttonGroup = new ButtonGroup();
 
 		button = makeNavigationButton("obj", OBJTOOL, "object editor", "object editor");
+		button.setSelected(true);
 		toolBar.add(button);
 
 		button = makeNavigationButton("terrain_edit", TERRAIN, "terrain editor", "terrain editor");

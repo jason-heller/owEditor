@@ -1,11 +1,12 @@
 package heightmap;
 
+import java.awt.event.KeyEvent;
+
 import org.joml.Vector3f;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
 import application.Globals;
-import console.Console;
 import entity.EntityControl;
 import entity.PlacedEntity;
 import opengl.GLWindow;
@@ -36,7 +37,7 @@ public class HeightmapControl {
 			heightmap.setDragBaseHeights(Globals.dragInitHeight.x, Globals.dragInitHeight.z, Globals.brushWidth);
 		}
 		
-		if (Input.isMouseDown(0) && Input.isDown(Keyboard.KEY_LSHIFT)) {
+		if (Input.isMouseDown(0) && Input.isDown(KeyEvent.VK_SHIFT)) {
 			heightmap.setDragBaseHeights(Globals.dragInitHeight.x, Globals.dragInitHeight.z, Globals.brushWidth);
 		}
 		
@@ -44,7 +45,7 @@ public class HeightmapControl {
 		case HEIGHTTOOL:
 			if (Input.isMouseDown(0)) {
 				if (Globals.dragTerrain) {
-					if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) {
+					if (Keyboard.isKeyDown(KeyEvent.VK_SHIFT)) {
 						heightmap.clearDragBaseHeights();
 						heightmap.setHeight(Globals.dragInitHeight.x, Globals.dragInitHeight.z, Globals.brushWidth,Mouse.getY() - Globals.dragInitHeight.y, Globals.toolShape);
 					} else {
@@ -52,7 +53,7 @@ public class HeightmapControl {
 					}
 
 				} else if (mousePoint != null) {
-					if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) {
+					if (Keyboard.isKeyDown(KeyEvent.VK_SHIFT)) {
 						heightmap.clearDragBaseHeights();
 						heightmap.setHeight(mousePoint.x, mousePoint.z, Globals.brushWidth, Globals.yPlane, Globals.toolShape);
 					} else {
@@ -64,7 +65,7 @@ public class HeightmapControl {
 				if (Globals.dragTerrain) {
 					heightmap.setHeight(Globals.dragInitHeight.x, Globals.dragInitHeight.z, Globals.brushWidth,Mouse.getY() - Globals.dragInitHeight.y, Globals.toolShape);
 				} else if (mousePoint != null) {
-					if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) {
+					if (Keyboard.isKeyDown(KeyEvent.VK_SHIFT)) {
 						heightmap.maxHeight(mousePoint.x, mousePoint.z, Globals.brushWidth, Globals.yPlane, Globals.toolShape);
 					} else {
 						heightmap.addHeight(mousePoint.x, mousePoint.z, Globals.brushWidth , -1f, Globals.toolShape);
@@ -81,10 +82,10 @@ public class HeightmapControl {
 		}
 		
 		if (Globals.yPlaneVisible) {
-			if (Input.isPressed(Keyboard.KEY_EQUALS)) {
+			if (Input.isPressed(KeyEvent.VK_EQUALS)) {
 				raiseYPlane(Globals.gridSize);
 			}
-			if (Input.isPressed(Keyboard.KEY_MINUS)) {
+			if (Input.isPressed(KeyEvent.VK_MINUS)) {
 				raiseYPlane(-Globals.gridSize);
 			}
 		}

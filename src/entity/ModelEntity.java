@@ -11,6 +11,8 @@ public class ModelEntity extends PlacedEntity {
 		super();
 		this.model = model;
 		this.texture = texture;
+		obb = new OBB(this, Vector3f.sub(model.getMax(), model.getMin()).div(2f));
+		obb.setRotation(rotation);
 	}
 	
 	public void setTexture(TextureAsset texture) {

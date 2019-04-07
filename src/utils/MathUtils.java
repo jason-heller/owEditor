@@ -63,7 +63,7 @@ public class MathUtils {
 			p1.mul(transform);
 			p2.mul(transform);
 			p3.mul(transform);
-			if (rayTriIntersection(orig, dir, p1, p2, p3)) {
+			if (rayTriIntersection(orig, dir, p1, p2, p3) != Float.POSITIVE_INFINITY) {
 				return true;
 			}
 		}
@@ -71,7 +71,36 @@ public class MathUtils {
 		return false;
 	}
 	
-	private static boolean rayTriIntersection(Vector3f origin, Vector3f direction, Vector3f p1, Vector3f p2, Vector3f p3) {
+	public static float rayMeshIntersection(Vector3f orig, Vector3f dir, Vector3f meshPos, Vector3f rot, float scale, float[] v) {
+		Matrix4f transform = new Matrix4f();
+		transform.translate(meshPos);
+		transform.rotateX(rot.x);
+		transform.rotateY(rot.y);
+		transform.rotateZ(rot.z);
+		transform.scale(scale);
+		
+		float dist = Float.POSITIVE_INFINITY;
+		
+		for(int i = 0; i < v.length; i += 9) {
+			Vector3f p1 = new Vector3f(v[i+0], v[i+1], v[i+2]);
+			Vector3f p2 = new Vector3f(v[i+3], v[i+4], v[i+5]);
+			Vector3f p3 = new Vector3f(v[i+6], v[i+7], v[i+8]);
+			//p1.sub(meshPos);
+			//p2.sub(meshPos);
+			//p3.sub(meshPos);
+			p1.mul(transform);
+			p2.mul(transform);
+			p3.mul(transform);
+			float d = rayTriIntersection(orig, dir, p1, p2, p3);
+			if (d < dist) {
+				dist = d;
+			}
+		}
+		
+		return dist;
+	}
+	
+	public static float rayTriIntersection(Vector3f origin, Vector3f normal, Vector3f p1, Vector3f p2, Vector3f p3) {
 		Vector3f    u, v, n;
         Vector3f    dir, w0;
         float     r, a, b;
@@ -83,26 +112,26 @@ public class MathUtils {
         n = Vector3f.cross(u, v);
         
         if (n.length() == 0) {
-            return false;
+            return Float.POSITIVE_INFINITY;
         }
         
-        dir = new Vector3f(direction);
+        dir = new Vector3f(normal);
         w0 = new Vector3f(origin);
         w0.sub(p1);
         a = -(new Vector3f(n).dot(w0));
         b = new Vector3f(n).dot(dir);
         
-        if ((float)Math.abs(b) < .00001f) {
-            return false;
+        if ((float)Math.abs(b) < .0001f) {
+            return Float.POSITIVE_INFINITY;
         }
         
         r = a / b;
         if (r < 0.0) {
-            return false;
+            return Float.POSITIVE_INFINITY;
         }
         
-        return true;
-	}
+        return r;
+    }
 
 	public static Vector3f rayPlaneIntersectPt(Vector3f origin, Vector3f direction, float dist, float nx, float ny, float nz) {
 		float normalDotRayDir = nx*direction.x + ny*direction.y + nz*direction.z;

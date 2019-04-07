@@ -5,7 +5,9 @@ import java.awt.event.ActionListener;
 
 import javax.swing.JMenuItem;
 
-import application.swing.frames.FlagFrame;
+import application.swing.windows.FlagFrame;
+import application.swing.windows.SplashFrame;
+import utils.AppUtils;
 
 public class MapMenuListener implements ActionListener {
 
@@ -16,7 +18,7 @@ public class MapMenuListener implements ActionListener {
 		
 		if (cmd.equals("EDIT MAP FLAGS"))
 		{
-			new FlagFrame();
+			AppUtils.open(FlagFrame.class);
 		}
 	}
 }

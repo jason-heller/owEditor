@@ -7,7 +7,7 @@ import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JMenuItem;
 
 import application.swing.SwingControl;
-import application.swing.frames.FlagFrame;
+import application.swing.windows.FlagFrame;
 
 public class EditMenuListener implements ActionListener {
 

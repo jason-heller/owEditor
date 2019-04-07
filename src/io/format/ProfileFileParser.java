@@ -16,6 +16,7 @@ import assets.TextureAsset;
 import io.data.DataChunk;
 import io.data.DataFile;
 import overhead.OverheadItem;
+import utils.EntryType;
 
 public class ProfileFileParser {
 	public static void parse(DataFile file) {
@@ -104,6 +105,9 @@ public class ProfileFileParser {
 				model.isCollisionMesh = data.get("isCollisionMesh").equals("TRUE")?true:false;
 				model.collisionMesh = data.get("collisionMesh");
 				model.filename = filename;
+				model.associatedTexture = data.get("associatedTexture");
+				model.type = EntryType.get(data.get("type"));
+				model.tags = getTags(data);
 				
 				models.add(model);
 				break;
@@ -116,6 +120,8 @@ public class ProfileFileParser {
 				texture.isTransparent = data.get("isTransparent").equals("TRUE")?true:false;
 				texture.material = data.get("material");
 				texture.filename = data.get("filename");
+				texture.type = EntryType.get(data.get("type"));
+				texture.tags = getTags(data);
 				
 				textures.add(texture);
 				
@@ -132,6 +138,8 @@ public class ProfileFileParser {
 				entity.scale = Integer.parseInt(data.get("scale"));
 				entity.material = data.get("material");
 				entity.properties = data.get("properties");
+				entity.type = EntryType.get(data.get("type"));
+				entity.tags = getTags(data);
 				
 				entities.add(entity);
 				break;
@@ -146,5 +154,13 @@ public class ProfileFileParser {
 		Profile.entities = entities.toArray(new Entity[0]);
 		
 		SwingControl.populateAssetList();
+	}
+
+	private static String[] getTags(Map<String, String> data) {
+		String str = data.get("tags");
+		
+		if (str == null) return new String[] {};
+		
+		return str.replaceAll(", ", ",").split(",");
 	}
 }

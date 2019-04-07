@@ -104,7 +104,7 @@ public class GLWindow {
 	}
 	
 	public void step() {
-		boolean redraw = SwingControl.canvasPane.isAncestorOf(parent);
+		//boolean redraw = SwingControl.canvasPane.isAncestorOf(parent);
 		
 		if (lastManualRefreshRequest != -1 && System.currentTimeMillis() > lastManualRefreshRequest + TIME_TICK_MS*2) {
 			refreshDisplay();

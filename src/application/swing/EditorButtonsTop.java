@@ -63,7 +63,9 @@ public class EditorButtonsTop extends JPanel implements ActionListener {
 		});
 		
 		addSeparator();
-		addButton(true, "yplaneminus", "TOGGLE_FREECAM", "Toggle freecam mode");
+		addButton(true, "gridsnap", "GRIDSNAP", "Toggle grid snapping");
+		addButton(true, "objsnap", "OBJSNAP", "Toggle object snapping");
+		addButton(true, "objcol", "OBJCOL", "Toggle object placement collision");
 		
 		//btn.setSelected(true);
 		
@@ -164,6 +166,16 @@ public class EditorButtonsTop extends JPanel implements ActionListener {
 		
 		else if ("TOGGLE_FREECAM".equals(cmd)) {
 			GLWindow.camera.toggleFreecam();
+		}
+		
+		else if ("GRIDSNAP".equals(cmd)) {
+			Globals.gridSnap = !Globals.gridSnap;
+		}
+		else if ("OBJSNAP".equals(cmd)) {
+			Globals.objectSnap = !Globals.objectSnap;
+		}
+		else if ("OBJCOL".equals(cmd)) {
+			Globals.objectPlacementCollision = !Globals.objectPlacementCollision;
 		}
 	}
 }

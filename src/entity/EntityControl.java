@@ -1,21 +1,23 @@
 package entity;
 
+import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.joml.Vector2f;
 import org.joml.Vector3f;
-import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
+import application.Globals;
+import application.Profile;
 import assets.Entity;
 import assets.Model;
 import assets.TextureAsset;
+import console.cmd.DeleteSelectedCommand;
 import heightmap.HeightmapControl;
 import io.SaveData;
 import io.data.DataChunk;
-import io.data.DataElement;
 import io.data.DataFormat;
 import opengl.GLWindow;
 import opengl.tex.Texture;
@@ -23,12 +25,13 @@ import utils.Input;
 import utils.MathUtils;
 
 public class EntityControl extends SaveData {
-	private static List<PlacedEntity> entities = new ArrayList<PlacedEntity>();
+	public static List<PlacedEntity> entities = new ArrayList<PlacedEntity>();
 	public static List<PlacedEntity> selected = new ArrayList<PlacedEntity>();
 	private static List<PlacedEntity> copied = new ArrayList<PlacedEntity>();
+	private static List<PlacedEntity> markedForDeletion = new ArrayList<PlacedEntity>();
 	
 	private static Vector3f translation = new Vector3f();
-	private static Vector3f rotation = new Vector3f();
+	private static Vector3f rotation = new Vector3f(), suggestedRotation = new Vector3f();
 	private static Vector3f rotationAxis = new Vector3f(0,1,0);
 	private static float scale = 0f;
 	private static boolean translating, rotating, scaling;
@@ -36,27 +39,55 @@ public class EntityControl extends SaveData {
 	private static Vector2f rotationAnchor = new Vector2f();
 	private static Vector2f scalingAnchor = new Vector2f();
 	
-	public void placeEntity(Model model, TextureAsset texture) {
+	public static ModelEntity placeEntity(Model model, TextureAsset texture) {
 		Vector3f position = HeightmapControl.picker.getCurrentTerrainPoint();
 		
-		if (position == null) return;
+		if (position == null) return null;
+		
+		if (model.associatedTexture != null && !model.associatedTexture.equals("")) {
+			texture = Profile.getTexture(model.associatedTexture);
+		}
 		
 		ModelEntity mEnt = new ModelEntity(model, texture);
 		entities.add(mEnt);
+		deselectAll();
+		select(mEnt);
 		mEnt.setPosition(position);
+		return mEnt;
 	}
 	
-	public void placeEntity(Entity entity) {
+	private static void deselectAll() {
+		for(PlacedEntity e : selected) {
+			e.deselect();
+		}
+		selected.clear();
+	}
+	
+	private static void select(PlacedEntity e) {
+		selected.add(e);
+		e.select();
+	}
+	
+	private static void deselect(PlacedEntity e) {
+		selected.remove(e);
+		e.deselect();
+	}
+
+	public static PlacedEntity placeEntity(Entity entity) {
 		Vector3f position = HeightmapControl.picker.getCurrentTerrainPoint();
 		
-		if (position == null) return;
+		if (position == null) return null;
 		
 		PlacedEntity ent = new PlacedEntity(entity);
 		entities.add(ent);
+		deselectAll();
+		select(ent);
 		ent.setPosition(position);
+		
+		return ent;
 	}
 	
-	public void drawEntities() {
+	public synchronized void drawEntities() {
 		for(PlacedEntity e : entities) {
 			Model model = e.getModel();
 			Texture texture = e.getTexture().texture;
@@ -68,9 +99,15 @@ public class EntityControl extends SaveData {
 				GL11.glTranslatef(e.position.x+EntityControl.translation.x,
 						e.position.y+EntityControl.translation.y,
 						e.position.z+EntityControl.translation.z);
-				GL11.glRotatef(e.rotation.x+EntityControl.rotation.x, 1,0,0);
-				GL11.glRotatef(e.rotation.y+EntityControl.rotation.y, 0,1,0);
-				GL11.glRotatef(e.rotation.z+EntityControl.rotation.z, 0,0,1);
+				if (suggestedRotation.isZero()) {
+					GL11.glRotatef(e.rotation.x+EntityControl.rotation.x, 1,0,0);
+					GL11.glRotatef(e.rotation.y+EntityControl.rotation.y, 0,1,0);
+					GL11.glRotatef(e.rotation.z+EntityControl.rotation.z, 0,0,1);
+				} else {
+					GL11.glRotatef(suggestedRotation.x, 1,0,0);
+					GL11.glRotatef(suggestedRotation.y, 0,1,0);
+					GL11.glRotatef(suggestedRotation.z, 0,0,1);
+				}
 				GL11.glScalef(e.scale+EntityControl.scale, e.scale+EntityControl.scale, e.scale+EntityControl.scale);
 			} else {
 				GL11.glTranslatef(e.position.x, e.position.y, e.position.z);
@@ -94,6 +131,14 @@ public class EntityControl extends SaveData {
 			
 			GL11.glPopMatrix();
 		}
+		
+		for(PlacedEntity e : markedForDeletion) {
+			entities.remove(e);
+			selected.remove(e);
+			copied.remove(e);
+		}
+		
+		markedForDeletion.clear();
 	}
 	
 	public void step() {
@@ -103,7 +148,68 @@ public class EntityControl extends SaveData {
 			
 				Vector3f diff = Vector3f.sub(tPoint, translationAnchor);
 				
-				if (Input.isDown(Keyboard.KEY_LSHIFT)) {
+				if (Globals.gridSnap) {
+					diff.x = (float) (Math.floor(diff.x / Globals.gridSize)*Globals.gridSize);
+					diff.y = (float) (Math.floor(diff.y / Globals.gridSize)*Globals.gridSize);
+					diff.z = (float) (Math.floor(diff.z / Globals.gridSize)*Globals.gridSize);	
+					
+					
+				}
+				
+				if (selected.size() == 1) {
+					if (Globals.objectSnap) {
+						PlacedEntity current = selected.get(0);
+						for(PlacedEntity e : entities) {
+							if (e.visibleInEditor && e != current) {
+								Vector3f originalPos = new Vector3f(current.position);
+								current.position.add(diff.x,0,diff.z);
+								Vector3f escapeAxis = current.getObb().checkForSnap(e.getObb());
+								current.position.set(originalPos);
+								
+								if (escapeAxis != null) {
+									float length;
+									if (escapeAxis.equals(e.getObb().X)) {
+										length = (e.getObb().bounds.x*e.scale + current.getObb().bounds.x*current.scale);
+									} else if (escapeAxis.equals(e.getObb().Y)) {
+										length = (e.getObb().bounds.y*e.scale + current.getObb().bounds.y*current.scale);
+									} else {
+										length = (e.getObb().bounds.z*e.scale + current.getObb().bounds.z*current.scale);
+									}
+									
+									diff = Vector3f.add(e.position, Vector3f.mul(escapeAxis, length));
+									diff.sub(originalPos);
+									
+									suggestedRotation.x = e.rotation.x;
+									suggestedRotation.y = e.rotation.y;
+									suggestedRotation.z = e.rotation.z;
+								} else {
+									suggestedRotation.zero();
+								}
+							}
+						}
+					}
+					
+					else if (Globals.objectPlacementCollision) {
+						PlacedEntity current = selected.get(0);
+						for(PlacedEntity e : entities) {
+							if (e.visibleInEditor && e != current) {
+								Vector3f originalPos = new Vector3f(current.position);
+								current.position.add(diff.x,0,diff.z);
+								Vector3f escape = current.getObb().intersection(e.getObb());
+								current.position.set(originalPos);
+								
+								if (escape != null) {
+									diff.x += escape.x;
+									diff.y += escape.y;
+									diff.z += escape.z;
+									
+								}
+							}
+						}
+					}
+				}
+				
+				if (Input.isDown(KeyEvent.VK_SHIFT)) {
 					translation.y = -diff.x;
 					translation.z = diff.z;
 				} else {
@@ -125,18 +231,18 @@ public class EntityControl extends SaveData {
 				rotation.z = Vector2f.distance(rotationAnchor, new Vector2f(Mouse.getX(), Mouse.getY()))/2f;
 			
 			
-			if (!Input.isDown(Keyboard.KEY_LCONTROL)) {
-				if (Input.isPressed(Keyboard.KEY_X)) {
+			if (!Input.isDown(KeyEvent.VK_CONTROL)) {
+				if (Input.isPressed(KeyEvent.VK_X)) {
 					rotationAxis.set(1,0,0);
 					beginRotating();
 				}
 				
-				if (Input.isPressed(Keyboard.KEY_Y)) {
+				if (Input.isPressed(KeyEvent.VK_Y)) {
 					rotationAxis.set(0,1,0);
 					beginRotating();
 				}
 				
-				if (Input.isPressed(Keyboard.KEY_Z)) {
+				if (Input.isPressed(KeyEvent.VK_Z)) {
 					rotationAxis.set(0,0,1);
 					beginRotating();
 				}
@@ -148,33 +254,82 @@ public class EntityControl extends SaveData {
 		}
 	}
 
-	public void selectEntity(Vector3f currentRay, Vector3f currentTerrainPoint) {
-		boolean ctrl = Input.isDown(Keyboard.KEY_LCONTROL);
+	public void selectEntity(Vector3f currentRay) {
+		boolean ctrl = Input.isDown(KeyEvent.VK_CONTROL);
+		
+		float shortestDist = Float.POSITIVE_INFINITY;
+		PlacedEntity entity = null;
 		
 		for(PlacedEntity e : entities) {
 			if (!ctrl) {
-				e.deselect();
-				selected.remove(e);
+				deselect(e);
 			}
 			
 			if (e.visibleInEditor
-			&&  MathUtils.entityBroadphaseIntersection(GLWindow.camera.getPosition(), currentRay, e)
-			&&  MathUtils.rayIntersectsMesh(GLWindow.camera.getPosition(), currentRay, e.position, e.rotation, e.scale, e.getModel().getVertices())) {
-				e.toggleSelect();
-				if (e.isSelected()) {
-					selected.add(e);
-				} else {
-					selected.remove(e);
+			&&  MathUtils.entityBroadphaseIntersection(GLWindow.camera.getPosition(), currentRay, e)) {
+				float dist = MathUtils.rayMeshIntersection(GLWindow.camera.getPosition(), currentRay, e.position, e.rotation, e.scale, e.getModel().getVertices());
+				
+				if (dist < shortestDist) {
+					shortestDist = dist;
+					entity = e;
 				}
 			}
 		}
+		
+		if (entity != null) {
+			entity.toggleSelect();
+			if (entity.isSelected()) {
+				select(entity);
+			} else {
+				deselect(entity);
+			}
+		}
+	}
+	
+	public static void fastClone(Vector3f currentRay) {
+		PlacedEntity placedEntity = getClicked(currentRay);
+		
+		if (placedEntity != null) {
+			deselectAll();
+			Entity entity = placedEntity.getEntity();
+			
+			if (entity != null) {
+				placeEntity(entity);
+			} else {
+				ModelEntity me = placeEntity(placedEntity.model, placedEntity.texture);
+				
+				if (me != null) {
+					me.rotation.set(placedEntity.rotation);
+					me.getObb().setRotation(me.rotation);
+					me.scale = placedEntity.scale;
+					//me.position.set(placedEntity.position);
+				}
+			}
+			
+			beginTranslating(placedEntity.position);
+		}
+	}
+	
+	public static PlacedEntity getClicked(Vector3f currentRay) {
+		float shortestDist = Float.POSITIVE_INFINITY;
+		PlacedEntity entity = null;
+		
+		for(PlacedEntity e : entities) {
+			if (e.visibleInEditor
+			&&  MathUtils.entityBroadphaseIntersection(GLWindow.camera.getPosition(), currentRay, e)) {
+				float dist = MathUtils.rayMeshIntersection(GLWindow.camera.getPosition(), currentRay, e.position, e.rotation, e.scale, e.getModel().getVertices());
+				
+				if (dist < shortestDist) {
+					shortestDist = dist;
+					entity = e;
+				}
+			}
+		}
+		
+		return entity;
 	}
 
-	public void deleteSelected() {
-		//for(PlacedEntity e : selected) {
-			
-		//}
-		
+	public static void deleteSelected() {
 		entities.removeAll(selected);
 		selected.clear();
 	}
@@ -199,22 +354,34 @@ public class EntityControl extends SaveData {
 		}
 	}
 	
+	public static void retextureSelected(TextureAsset texture) {
+		for(PlacedEntity e : selected) {
+			e.setTexture(texture);
+		}
+	}
+	
+	public static void retextureEntity(PlacedEntity e,TextureAsset texture) {
+		e.setTexture(texture);
+	}
+	
 	public void cut() {
 		copied.clear();
 		for(PlacedEntity e : selected) {
 			copied.add(new PlacedEntity(e.position, e));
 		}
-		deleteSelected();
+		
+		new DeleteSelectedCommand();
 	}
 	
-	public void paste() {
+	public static void paste() {
 		if (copied.size() == 0) return; 
 		
 		Vector3f position = HeightmapControl.picker.getCurrentTerrainPoint();
-		selected.clear();
+		deselectAll();
 		
 		Vector3f origin = copied.get(0).position;
 		for(PlacedEntity e : copied) {
+			//position = Vector3f.add(e.position, Vector3f.mul(e.getObb().Z, e.getObb().bounds.z*2));
 			PlacedEntity ne = new PlacedEntity(Vector3f.add(position, Vector3f.sub(e.position, origin)), e);
 			ne.select();
 			entities.add(ne);
@@ -225,7 +392,12 @@ public class EntityControl extends SaveData {
 	public void endTransforms() {
 		for(PlacedEntity e : selected) {
 			e.position.add(translation);
-			e.rotation.add(rotation);
+			if (suggestedRotation.isZero()) {
+				e.rotation.add(rotation);
+			} else {
+				e.rotation.set(suggestedRotation);
+			}
+			e.getObb().setRotation(e.rotation);
 			e.scale += scale;
 		}
 		
@@ -248,7 +420,7 @@ public class EntityControl extends SaveData {
 		scaling = false;
 	}
 
-	public void beginTranslating(Vector3f anchor) {
+	public static void beginTranslating(Vector3f anchor) {
 		if (selected.size() == 0) return;
 		rotating = false;
 		scaling = false;
@@ -258,6 +430,12 @@ public class EntityControl extends SaveData {
 			translationAnchor.set(selected.get(0).position);
 		} else {
 			translationAnchor.set(anchor);
+		}
+		
+		if (Globals.gridSnap) {
+			translationAnchor.x = (float) (Math.floor(translationAnchor.x / Globals.gridSize)*Globals.gridSize);
+			translationAnchor.y = (float) (Math.floor(translationAnchor.y / Globals.gridSize)*Globals.gridSize);
+			translationAnchor.z = (float) (Math.floor(translationAnchor.z / Globals.gridSize)*Globals.gridSize);
 		}
 	}
 	
@@ -308,7 +486,7 @@ public class EntityControl extends SaveData {
 		return true;
 	}
 
-	public void addEntity(PlacedEntity e) {
+	public synchronized void addEntity(PlacedEntity e) {
 		entities.add(e);
 	}
 
@@ -317,5 +495,13 @@ public class EntityControl extends SaveData {
 		entities.clear();
 		selected.clear();
 		copied.clear();
+	}
+
+	public boolean isTransforming() {
+		return (translating || rotating || scaling);
+	}
+
+	public void removeEntity(PlacedEntity e) {
+		markedForDeletion.add(e);
 	}
 }

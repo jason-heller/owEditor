@@ -16,7 +16,9 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.OverlayLayout;
+import javax.swing.UIManager;
 
+import application.Globals;
 import application.Profile;
 import application.swing.menu.EditorMenuBar;
 import assets.Entity;
@@ -37,8 +39,10 @@ public class SwingControl {
 	
 	private static EditorToolbar toolbar;
 	private static EditorButtonsTop btnsTop;
-	private static EditorList lists;
+	private static EditorList assetLists;
 	private static EditorMenuBar menuBar;
+	
+	public static boolean isTyping = false;
 	
 	private static int viewWidth, viewHeight;
 	
@@ -51,6 +55,8 @@ public class SwingControl {
 		try {
 			initViews();
 			overheadControl = new OverheadControl(overheadCanvas);
+			
+			frameColors();
 
 			//jFrame.setSize(width, height + 130);
 			jFrame.setTitle("Map Editor V2.0");
@@ -59,16 +65,17 @@ public class SwingControl {
 			btnsTop = new EditorButtonsTop();
 			final EditorCmdBox cmdBox = new EditorCmdBox();
 			menuBar = new EditorMenuBar();
-			lists = new EditorList();
+			assetLists = new EditorList();
 			toolbar = new EditorToolbar(cmdBox);
 
 			jFrame.add(btnsTop, BorderLayout.NORTH);
 			jFrame.add(toolbar, BorderLayout.WEST);
 			jFrame.add(cmdBox, BorderLayout.SOUTH);
 			jFrame.setJMenuBar(menuBar);
-			jFrame.add(lists, BorderLayout.EAST);
+			jFrame.add(assetLists, BorderLayout.EAST);
 			jFrame.getContentPane().setBackground(Color.DARK_GRAY);
 			jFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+			jFrame.setSize(width, height);
 
 			jFrame.setExtendedState(Frame.MAXIMIZED_BOTH);
 			
@@ -85,6 +92,39 @@ public class SwingControl {
 		}
 	}
 	
+	private static void frameColors() {
+		/*UIManager.put( "control", new Color(120, 120, 120) );
+		//UIManager.put( "nimbusBlueGrey", new Color(131, 99, 147) );
+		UIManager.put( "nimbusBase", new Color(100, 100, 100) );
+		UIManager.put( "nimbusLightBackground", new Color( 77, 77, 77) );
+		UIManager.put("InternalFrame.activeTitleForeground", Globals.COLOR_GENERAL_LIGHT);
+		UIManager.put("InternalFrame.activeTitleBackground", Globals.COLOR_GENERAL_LIGHT);
+		UIManager.put("InternalFrame.inactiveTitleBackground", Globals.COLOR_GENERAL_DARK);
+		UIManager.put("InternalFrame.inactiveTitleForeground", Globals.COLOR_GENERAL_DARK);
+		UIManager.put( "text", new Color( 230, 230, 230) );
+		UIManager.put( "nimbusDisabledText", new Color( 128, 128, 128) );
+		UIManager.put( "nimbusSelectedText", new Color( 255, 255, 255) );
+		UIManager.put( "info", new Color(100, 100, 100) );
+		  try {
+		    for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+		      if ("Nimbus".equals(info.getName())) {
+		          UIManager.setLookAndFeel(info.getClassName());
+		          break;
+		      }
+		    }
+		  } catch (ClassNotFoundException e) {
+		    e.printStackTrace();
+		  } catch (InstantiationException e) {
+		    e.printStackTrace();
+		  } catch (IllegalAccessException e) {
+		    e.printStackTrace();
+		  } catch (javax.swing.UnsupportedLookAndFeelException e) {
+		    e.printStackTrace();
+		  } catch (Exception e) {
+		    e.printStackTrace();
+		  }*/
+	}
+
 	private static void initViews() {
 		Dimension dimension = new Dimension(viewWidth, viewHeight);
 		canvasPane = new JPanel();
@@ -114,20 +154,25 @@ public class SwingControl {
 	}
 
 	public static void populateAssetList() {
-		lists.models.removeAll();
+		assetLists.models.removeAll();
+		assetLists.clear();
 		for(Model model : Profile.models) {
-			lists.add(model);
+			assetLists.add(model);
 		}
 		
-		lists.textures.removeAll();
+		assetLists.textures.removeAll();
 		for(TextureAsset texture : Profile.textures) {
-			lists.add(texture);
+			assetLists.add(texture);
 		}
 		
-		lists.entities.removeAll();
+		assetLists.entities.removeAll();
 		for(Entity entity : Profile.entities) {
-			lists.add(entity);
+			assetLists.add(entity);
 		}
+	}
+	
+	public static EditorList getAssetList() {
+		return assetLists;
 	}
 	
 	public static void updateSwing() {

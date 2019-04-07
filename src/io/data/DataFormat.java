@@ -80,24 +80,31 @@ public enum DataFormat {
 			new DataElement("solidity",Byte.class),
 			new DataElement("isCollisionMesh",Boolean.class),
 			new DataElement("collisionMesh",String.class),
-			new DataElement("filename", String.class)
+			new DataElement("filename", String.class),
+			new DataElement("associatedTexture", String.class),
+			new DataElement("tags", String[].class),
+			new DataElement("type", String.class)
 			),
 	
 	FORMAT_PROFILE_TEXTURE("Texture",
 			new DataElement("name", String.class),
 			new DataElement("isTransparent", Boolean.class),
-			new DataElement("material", Integer.class),
-			new DataElement("filename", String.class)
+			new DataElement("material", String.class),
+			new DataElement("filename", String.class),
+			new DataElement("tags", String[].class),
+			new DataElement("type", String.class)
 			),
 	
-	FORMAT_PROFILE_ENTITY("Entity",
+	FORMAT_PROFILE_ENTITY("Mapentity",
 			new DataElement("name", String.class),
 			new DataElement("isVisible", Boolean.class),
 			new DataElement("model", String.class),
 			new DataElement("texture", String.class),
 			new DataElement("scale", Integer.class),
 			new DataElement("material", String.class),
-			new DataElement("properties", String[].class)
+			new DataElement("properties", String[].class),
+			new DataElement("tags", String[].class),
+			new DataElement("type", String.class)
 			);
 
 	private DataElement[] elements;
